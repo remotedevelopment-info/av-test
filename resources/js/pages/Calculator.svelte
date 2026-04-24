@@ -23,6 +23,7 @@
     let purchasePriceInput = $state('');
     let firstTimeBuyer = $state(false);
     let additionalProperty = $state(false);
+    let priceValidationError = $state('');
 
     const started = $derived(
         purchasePriceInput.trim().length > 0 ||
@@ -54,10 +55,23 @@
         purchasePriceInput = '';
         firstTimeBuyer = false;
         additionalProperty = false;
+        priceValidationError = '';
     }
 
     function updatePurchasePrice(event: Event): void {
-        purchasePriceInput = (event.currentTarget as HTMLInputElement).value;
+        const input = event.currentTarget as HTMLInputElement;
+        const value = input.value;
+        const filtered = value.replace(/[^0-9.]/g, '');
+
+        // Check if non-numeric characters were entered
+        if (value !== filtered) {
+            priceValidationError =
+                'Only numbers and decimal points are allowed';
+        } else {
+            priceValidationError = '';
+        }
+
+        purchasePriceInput = filtered;
     }
 
     onMount(() => {
@@ -169,12 +183,25 @@
                                 placeholder={purchasePriceField.placeholder}
                                 value={purchasePriceInput}
                                 oninput={updatePurchasePrice}
+                                aria-invalid={priceValidationError ? 'true' : 'false'}
+                                class={priceValidationError
+                                    ? 'border-red-500 dark:border-red-500 focus-visible:ring-red-500'
+                                    : ''}
                             />
-                            <p
-                                class="text-slate-500 dark:text-slate-400 text-sm leading-6"
-                            >
-                                {purchasePriceField.help}
-                            </p>
+                            {#if priceValidationError}
+                                <p
+                                    class="font-medium text-red-600 dark:text-red-400 text-sm leading-6"
+                                    role="alert"
+                                >
+                                    {priceValidationError}
+                                </p>
+                            {:else}
+                                <p
+                                    class="text-slate-500 dark:text-slate-400 text-sm leading-6"
+                                >
+                                    {purchasePriceField.help}
+                                </p>
+                            {/if}
                         </div>
                     {/if}
 

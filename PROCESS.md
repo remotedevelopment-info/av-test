@@ -189,3 +189,18 @@ No Blockers
 - would improve the UX - dark mode has been assumed (it is a developer only version at this stage): allowing a tailwind switch to select light mode would be a nice to have
 - I think the time window of 2 hours was actually a good time for this
 
+### Additional
+- non numeric input was not processed added validation (extra 2 minutes)
+
+#### 2026-04-24: 14:35
+- Status: Add input validation with clear error messaging
+- What I changed: 
+  - Added `priceValidationError` state to track validation errors
+  - Modified `updatePurchasePrice()` to detect non-numeric characters and prevent them from being entered
+  - Added error message display that replaces the help text when validation error occurs
+  - Styled error state with red border and red text; accessibility attributes (aria-invalid, role="alert")
+- What I learned: Clear, immediate feedback is better than silent filtering
+- Result: Users now see "Only numbers and decimal points are allowed" when they try to enter non-numeric characters; input is automatically filtered and prevented
+- Next step: User testing of validation message clarity
+
+
