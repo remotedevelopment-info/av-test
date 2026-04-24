@@ -145,9 +145,10 @@ export function calculateSdlt(
         );
     }
 
-    const totalTax = roundToPennies(
+    const rawTotalTax = roundToPennies(
         breakdown.reduce((total, line) => total + line.tax, 0),
     );
+    const totalTax = roundDownToPounds(rawTotalTax);
 
     return {
         validationErrors: [],
@@ -213,4 +214,8 @@ function calculateBands(
 
 function roundToPennies(value: number): number {
     return Math.round(value * 100) / 100;
+}
+
+function roundDownToPounds(value: number): number {
+    return Math.floor(roundToPennies(value));
 }
