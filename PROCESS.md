@@ -194,24 +194,6 @@ No Blockers
 ### If I Had More Time (added after time expired)
 
 - I would more extensively test the app, and review it for user understanding with another person giving feedback
-- 
--
+- would improve the UX - dark mode has been assumed (it is a developer only version at this stage): allowing a tailwind switch to select light mode would be a nice to have
+- I think the time window of 2 hours was actually a good time for this
 
-## AI Update
-
-```text
-Implemented JSON-as-source-of-truth calculator flow:
-- Added public calculator route.
-- Added SDLT JSON data file and frontend calculator logic that reads from it.
-- Wired the frontend form to use JSON-backed rules for all calculations.
-- Added calculator page UI with breakdown and effective rate.
-- Added a focused feature test for the calculator page route.
-- Regenerated Wayfinder route helpers.
-- Verified with passing feature test and clean Svelte type check.
-```
-- 2026-04-24T04:40:15+00:00 GET /process
-- 2026-04-24T04:56:37+00:00 GET /process
-- 2026-04-24T05:02:07+00:00 GET /process
-- 2026-04-24T05:08:02+00:00 GET /process
-- 2026-04-24T05:11:17+00:00 GET /process
-- 2026-04-24T06:24:30+00:00 GET /process
