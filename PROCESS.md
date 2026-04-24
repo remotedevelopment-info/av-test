@@ -140,10 +140,7 @@ NB: times are approximate
 
 ## Blockers
 
-| Time | Blocker | Impact | Resolution |
-| --- | --- | --- | --- |
-|  |  |  |  |
-|  |  |  |  |
+No Blockers
 
 ## Request Log
 
@@ -163,34 +160,41 @@ NB: times are approximate
 
 ## Verification
 
-- Manual checks completed:
-- Tests run:
+- Manual checks completed: DONE
+- Tests run: 8 tests pass
+- Caveats: 
+  - negative prices can be input (no tax)
+  - calculations are done in real time on frontend (feature)
+  - the actual app is /calculator - this is what we would publish
+  - the / home page gives access to PLAN.md and PROCESS.md
+  - the / home page also gives access tothe scenario editor: to use cut and paste
+  details from HMRC calculator, and HRMC result for comparison
 - Remaining risk:
 
 ## Known Gaps
 
--
--
--
+- the actual app is in /calculator: for the exercise and completeness / route has info about the app which would not be published
+- documentation about the app may be incomplete at this stage, I have focused on documenting my process
 
 ## Final Summary
+- two AIs were used in the completion of the App: Code Pilot (auto mode, using GPT 5.4 and or Claude Sonnet 4.6)
+- the app was completed within the 2 hours time allocation (less two brief breaks)
 
 ### What Works
 
--
--
--
+- app is fully functional
+- additional fuctionality included (the Scenario tester) was not required.
+- testing of edge cases included
 
 ### What Is Incomplete
 
--
--
--
+- more testing could be desired
+- TIME LIMIT reached
 
-### If I Had More Time
+### If I Had More Time (added after time expired)
 
--
--
+- I would more extensively test the app, and review it for user understanding with another person giving feedback
+- 
 -
 
 ## AI Update
@@ -210,3 +214,4 @@ Implemented JSON-as-source-of-truth calculator flow:
 - 2026-04-24T05:02:07+00:00 GET /process
 - 2026-04-24T05:08:02+00:00 GET /process
 - 2026-04-24T05:11:17+00:00 GET /process
+- 2026-04-24T06:24:30+00:00 GET /process
