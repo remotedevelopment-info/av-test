@@ -90,31 +90,33 @@ NB: times are approximate
 
 #### 00:15
 - Status: Started with a prebuilt Laravel 13/Svelte inertia setup 
-- What I changed: created viewers for the
-- What I learned:
-- Next step:
+- What I changed: created viewers for the PROCESS.md and PLAN.md
 
 #### 00:30
-- Status:
-- What I changed:
+- Status: Built the base JSON and AI built the application outline from the PLAN
+- What I changed: Created a navigation system to easily 
 - What I learned:
 - Next step:
 
 #### 00:45
-- Status:
-- What I changed:
-- What I learned:
+- Status: HMRC check shows divergence in result
+- What I changed: Establish scenarios to quickly check calculations against HMRC
+- What I learned: 
 - Next step:
 
 #### 01:00
-- Status:
-- What I changed:
-- What I learned:
-- Next step:
+- Status: found tests were failing on DB: 
+- What I changed: asked AI to skip any DB related tests and now tests are passing
+##### Result: 
+- Your app exercise is focused on calculation behavior.
+- Database-backed auth/profile flows are excluded from default runs until/if you re-enable them.
+###### To re-enable later:
+- Remove the three <exclude> entries in phpunit.xml
+- Re-enable DB test setup in Pest.php if needed by uncommenting RefreshDatabase usage.
 
-#### 01:15
-- Status:
-- What I changed:
+#### 01:10
+- Status: Debug caculator divergences
+- What I changed: 
 - What I learned:
 - Next step:
 
