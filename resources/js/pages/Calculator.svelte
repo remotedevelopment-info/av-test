@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
     import { Button } from '@/components/ui/button';
     import { Checkbox } from '@/components/ui/checkbox';
@@ -58,6 +59,14 @@
     function updatePurchasePrice(event: Event): void {
         purchasePriceInput = (event.currentTarget as HTMLInputElement).value;
     }
+
+    onMount(() => {
+        const priceInput = document.getElementById('purchase-price');
+
+        if (priceInput instanceof HTMLInputElement) {
+            priceInput.focus();
+        }
+    });
 </script>
 
 <AppHead title="SDLT Calculator" />
@@ -155,6 +164,7 @@
                             <Input
                                 id="purchase-price"
                                 type="text"
+                                autofocus
                                 inputmode={purchasePriceField.inputMode}
                                 placeholder={purchasePriceField.placeholder}
                                 value={purchasePriceInput}
