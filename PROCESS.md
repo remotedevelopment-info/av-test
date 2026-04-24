@@ -60,14 +60,6 @@ NB: times are approximate
 - [ ] Assumption 2: Logging actions in PROCESS.md, timer set to 2hours
 - [ ] Assumption 3:
 
-## Decision Log
-
-| Time | Decision | Reason |
-| --- | --- | --- |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-
 ## Progress Log
 
 ### Entry Template
