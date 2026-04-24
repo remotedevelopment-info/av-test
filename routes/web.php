@@ -12,6 +12,14 @@ Route::inertia('/', 'Welcome', [
 
 Route::inertia('calculator', 'Calculator')->name('calculator');
 
+Route::inertia('scenarios', 'scenarios/Index')->name('scenarios.index');
+
+Route::inertia('scenarios/hmrc', 'scenarios/hmrc/Index')
+    ->name('scenarios.hmrc.index');
+
+Route::inertia('scenarios/hmrc/500000', 'scenarios/hmrc/500000')
+    ->name('scenarios.hmrc.500000');
+
 Route::get('plan', function () {
     abort_unless(File::exists(base_path('PLAN.md')), 404);
 

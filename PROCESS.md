@@ -89,8 +89,8 @@ NB: times are approximate
 - Next step: Review requirements and define the JSON contract
 
 #### 00:15
-- Status:
-- What I changed:
+- Status: Started with a prebuilt Laravel 13/Svelte inertia setup 
+- What I changed: created viewers for the
 - What I learned:
 - Next step:
 
@@ -153,6 +153,9 @@ NB: times are approximate
 - 2026-04-24: Format PROCESS.md reply content as proper Markdown and keep summaries in code blocks.
 - 2026-04-24: Replace default home page with a simple menu and calculator as a primary item.
 - 2026-04-24: Return to agentic mode; begin testing and improving the calculator, and verify/update test coverage.
+- 2026-04-24: Add /scenarios/hmrc/500000 route and page for pasting HMRC calculator text entries.
+- 2026-04-24: Add /scenarios and /scenarios/hmrc index pages with a shared navigation header layout linking Home and Calculator.
+- 2026-04-24: Update HMRC 500000 scenario page to parse HMRC summary inputs/results and compare against calculator output.
 
 ## Verification
 
@@ -200,3 +203,6 @@ Implemented JSON-as-source-of-truth calculator flow:
 ```
 - 2026-04-24T04:40:15+00:00 GET /process
 - 2026-04-24T04:56:37+00:00 GET /process
+- 2026-04-24T05:02:07+00:00 GET /process
+- 2026-04-24T05:08:02+00:00 GET /process
+- 2026-04-24T05:11:17+00:00 GET /process

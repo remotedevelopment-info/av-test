@@ -2,7 +2,8 @@
     import { Link, page } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import { toUrl } from '@/lib/utils';
-    import { calculator, dashboard, login, register } from '@/routes';
+    import { calculator, login, register } from '@/routes';
+    import { index as scenariosIndex } from '@/routes/scenarios';
 
     let {
         canRegister = true,
@@ -71,15 +72,15 @@
 
             {#if auth.user}
                 <Link
-                    href={toUrl(dashboard())}
+                    href={toUrl(scenariosIndex())}
                     class="bg-white/90 dark:bg-slate-950/70 hover:shadow-lg p-6 border border-slate-200 dark:border-slate-800 rounded-3xl transition hover:-translate-y-0.5"
                 >
                     <p class="font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-[0.2em]">
-                        App
+                        Explore
                     </p>
-                    <h2 class="mt-2 font-semibold text-2xl">Dashboard</h2>
+                    <h2 class="mt-2 font-semibold text-2xl">Scenarios</h2>
                     <p class="mt-2 text-slate-600 dark:text-slate-300 text-sm leading-7">
-                        Access authenticated application features.
+                        Open scenario indexes and jump directly into HMRC case pages.
                     </p>
                 </Link>
             {:else}
