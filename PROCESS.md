@@ -122,18 +122,18 @@ NB: times are approximate
 
 #### 01:25
 - Status: testing scenarios
-- What I changed:
-- What I learned:
-- Next step:
+- What I changed: first time buyer scenario not pasted, it asks.  520k/16k correct, 680500/24025 correct, 1000005 results in a £1 difference, HMRC is rounding down, fixed.
+- What I learned: test edge cases!
+- Next step: test on frontend /calculator (user application) - looks good
 
-#### 01:45
-- Status:
-- What I changed:
-- What I learned:
-- Next step:
+#### 01:32
+- Status: change heading from JSON-Driven Calcultion
+- What I changed: improved wording to be less technical
+- What I learned: AI can be a bit literal!
+- Next step: objective testing
 
-#### 02:00
-- Status: Wrap-up
+#### 01:43
+- Status: Wrap-up, testing and docs
 - What I changed:
 - What I learned:
 - Next step: Summarize what works, what is incomplete, and what I would do next
@@ -159,6 +159,7 @@ NB: times are approximate
 - 2026-04-24: Add /scenarios and /scenarios/hmrc index pages with a shared navigation header layout linking Home and Calculator.
 - 2026-04-24: Update HMRC 500000 scenario page to parse HMRC summary inputs/results and compare against calculator output.
 - 2026-04-24: Begin parser-hardening for HMRC scenario input, including broader field extraction and explicit out-of-scope gating.
+- 2026-04-24: Fix SDLT rounding divergence by rounding total payable tax down to whole pounds (HMRC-aligned behavior).
 
 ## Verification
 

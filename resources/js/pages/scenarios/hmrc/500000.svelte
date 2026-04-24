@@ -443,7 +443,7 @@
     }
 </script>
 
-<AppHead title="HMRC Scenario 500000" />
+<AppHead title="HMRC Scenario Check" />
 
 <div class="bg-[linear-gradient(180deg,#f8fafc_0%,#ffffff_60%,#fef3c7_100%)] dark:bg-[linear-gradient(180deg,#0b1120_0%,#0f172a_60%,#1e293b_100%)] px-6 py-8 border border-slate-200/80 dark:border-slate-800 rounded-3xl text-slate-900 dark:text-slate-100">
     <main class="flex flex-col gap-6 mx-auto w-full max-w-5xl">
