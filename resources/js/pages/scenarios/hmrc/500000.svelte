@@ -4,20 +4,71 @@
         calculateSdlt,
         formatCurrency,
         formatPercent,
+        sdltConfig,
     } from '@/lib/sdlt';
 
     let pastedText = $state('');
     let hmrcResultInput = $state('');
+    let firstTimeBuyerOverride: 'auto' | 'yes' | 'no' = $state('auto');
+
+    const fieldCandidates = {
+        propertyTenure: ['freehold or leasehold', 'tenure'],
+        residential: [
+            'residential or non-residential',
+            'residential or non residential',
+            'property type',
+        ],
+        effectiveDate: [
+            'effective date of transaction',
+            'effective date',
+            'date of transaction',
+        ],
+        nonUkResident: ['non-uk resident', 'non uk resident'],
+        individual: ['individual'],
+        additionalProperty: [
+            'additional residential property',
+            'additional property',
+        ],
+        ownedOtherProperty: ['owned other property', 'own other property'],
+        mainResidence: ['main residence'],
+        firstTimeBuyer: [
+            'first time buyer',
+            'first-time buyer',
+            'first time buyer relief',
+            'all buyers are first-time buyers',
+        ],
+        purchasePrice: ['purchase price', 'price'],
+        hmrcResult: [
+            'sdlt due',
+            'total sdlt',
+            'tax due',
+            'you must pay',
+            'amount to pay',
+            'stamp duty due',
+        ],
+    } as const;
+
+    const knownLabels = Object.values(fieldCandidates)
+        .flat()
+        .sort((left, right) => right.length - left.length);
 
     type ParsedSummary = {
         entries: string[];
         keyValues: Array<{ key: string; value: string }>;
         issues: string[];
+        warnings: string[];
         residential: boolean | null;
         additionalProperty: boolean | null;
         firstTimeBuyer: boolean | null;
         purchasePrice: number | null;
         hmrcResult: number | null;
+        propertyTenure: 'freehold' | 'leasehold' | null;
+        effectiveDate: string | null;
+        effectiveDateSupported: boolean | null;
+        nonUkResident: boolean | null;
+        individual: boolean | null;
+        ownedOtherProperty: boolean | null;
+        mainResidence: boolean | null;
     };
 
     const entries = $derived.by(() =>
@@ -45,29 +96,47 @@
             .filter((item): item is { key: string; value: string } => item !== null);
 
         const issues: string[] = [];
+        const warnings: string[] = [];
 
-        const residentialValue = findValue(keyValues, [
-            'residential or non-residential',
-        ]);
-        const additionalPropertyValue = findValue(keyValues, [
-            'additional residential property',
-        ]);
-        const firstTimeBuyerValue = findValue(keyValues, [
-            'first time buyer',
-            'first-time buyer',
-            'first time buyer relief',
-        ]);
-        const purchasePriceValue = findValue(keyValues, ['purchase price']);
-        const hmrcResultValue = findValue(keyValues, [
-            'sdlt due',
-            'total sdlt',
-            'tax due',
-            'you must pay',
-            'amount to pay',
-        ]);
+        const propertyTenureValue = findValue(
+            keyValues,
+            fieldCandidates.propertyTenure,
+        );
+        const residentialValue = findValue(keyValues, fieldCandidates.residential);
+        const effectiveDateValue = findValue(keyValues, fieldCandidates.effectiveDate);
+        const nonUkResidentValue = findValue(
+            keyValues,
+            fieldCandidates.nonUkResident,
+        );
+        const individualValue = findValue(keyValues, fieldCandidates.individual);
+        const additionalPropertyValue = findValue(
+            keyValues,
+            fieldCandidates.additionalProperty,
+        );
+        const ownedOtherPropertyValue = findValue(
+            keyValues,
+            fieldCandidates.ownedOtherProperty,
+        );
+        const mainResidenceValue = findValue(
+            keyValues,
+            fieldCandidates.mainResidence,
+        );
+        const firstTimeBuyerValue = findValue(
+            keyValues,
+            fieldCandidates.firstTimeBuyer,
+        );
+        const purchasePriceValue = findValue(keyValues, fieldCandidates.purchasePrice);
+        const hmrcResultValue = findValue(keyValues, fieldCandidates.hmrcResult);
 
+        const propertyTenure = parseTenure(propertyTenureValue);
         const residential = parseResidential(residentialValue);
+        const effectiveDate = effectiveDateValue;
+        const effectiveDateSupported = isSupportedEffectiveDate(effectiveDateValue);
+        const nonUkResident = parseYesNo(nonUkResidentValue);
+        const individual = parseYesNo(individualValue);
         const additionalProperty = parseYesNo(additionalPropertyValue);
+        const ownedOtherProperty = parseYesNo(ownedOtherPropertyValue);
+        const mainResidence = parseYesNo(mainResidenceValue);
         const firstTimeBuyer = parseYesNo(firstTimeBuyerValue);
         const purchasePrice = parseCurrency(purchasePriceValue);
         const hmrcResult = parseCurrency(hmrcResultValue);
@@ -84,6 +153,36 @@
             );
         }
 
+        if (propertyTenure === 'leasehold') {
+            issues.push(
+                'Leasehold-specific SDLT is not currently modeled in this exercise; use a freehold residential scenario for parity checks.',
+            );
+        }
+
+        if (nonUkResident === true) {
+            issues.push(
+                'Non-UK resident surcharge is not currently modeled, so this scenario is out of scope for exact parity.',
+            );
+        }
+
+        if (individual === false) {
+            issues.push(
+                'Non-individual buyers are not currently modeled, so this scenario is out of scope for exact parity.',
+            );
+        }
+
+        if (effectiveDate !== null && effectiveDateSupported === false) {
+            issues.push(
+                `The effective date appears to be before ${sdltConfig.meta.effectiveFrom}, so the current rates file may not apply.`,
+            );
+        }
+
+        if (effectiveDate === null) {
+            warnings.push(
+                'Effective date was not parsed; comparison assumes the current rates file applies.',
+            );
+        }
+
         if (purchasePrice === null) {
             issues.push('Could not parse a purchase price from the HMRC summary.');
         }
@@ -95,8 +194,26 @@
         }
 
         if (firstTimeBuyer === null) {
-            issues.push(
-                'First-time buyer status was not found; calculator comparison uses "No" unless you include this field in the pasted summary.',
+            warnings.push(
+                'First-time buyer status was not found in the HMRC summary; confirm it manually before comparing results.',
+            );
+        }
+
+        if (
+            firstTimeBuyer === true &&
+            (ownedOtherProperty === true || mainResidence === false)
+        ) {
+            warnings.push(
+                'The pasted summary looks inconsistent with first-time buyer relief. Check the copied HMRC answers before comparing results.',
+            );
+        }
+
+        if (
+            additionalProperty === true &&
+            ownedOtherProperty === false
+        ) {
+            warnings.push(
+                'HMRC summary says this is an additional property but also says no other property is owned. Check the pasted answers for formatting or copy issues.',
             );
         }
 
@@ -104,13 +221,51 @@
             entries: lines,
             keyValues,
             issues,
+            warnings,
             residential,
             additionalProperty,
             firstTimeBuyer,
             purchasePrice,
             hmrcResult,
+            propertyTenure,
+            effectiveDate,
+            effectiveDateSupported,
+            nonUkResident,
+            individual,
+            ownedOtherProperty,
+            mainResidence,
         };
     });
+
+    const resolvedFirstTimeBuyer = $derived.by(() => {
+        if (parsedSummary.firstTimeBuyer !== null) {
+            return parsedSummary.firstTimeBuyer;
+        }
+
+        if (firstTimeBuyerOverride === 'yes') {
+            return true;
+        }
+
+        if (firstTimeBuyerOverride === 'no') {
+            return false;
+        }
+
+        return null;
+    });
+
+    const comparisonBlockers = $derived.by(() => {
+        const blockers = [...parsedSummary.issues];
+
+        if (resolvedFirstTimeBuyer === null) {
+            blockers.push(
+                'Confirm whether all buyers are first-time buyers before comparing this scenario.',
+            );
+        }
+
+        return blockers;
+    });
+
+    const canCalculate = $derived(comparisonBlockers.length === 0);
 
     const derivedHmrcResult = $derived.by(() => {
         if (parsedSummary.hmrcResult !== null) {
@@ -121,15 +276,15 @@
     });
 
     const calculatorInput = $derived.by(() => ({
-        purchasePrice: parsedSummary.purchasePrice,
-        firstTimeBuyer: parsedSummary.firstTimeBuyer ?? false,
+        purchasePrice: canCalculate ? parsedSummary.purchasePrice : null,
+        firstTimeBuyer: resolvedFirstTimeBuyer ?? false,
         additionalProperty: parsedSummary.additionalProperty ?? false,
     }));
 
     const calculation = $derived.by(() => calculateSdlt(calculatorInput));
 
     const difference = $derived.by(() => {
-        if (derivedHmrcResult === null) {
+        if (derivedHmrcResult === null || !canCalculate) {
             return null;
         }
 
@@ -137,12 +292,13 @@
     });
 
     const isMatch = $derived.by(() =>
-        difference === null ? null : Math.abs(difference) < 0.5,
+        difference === null ? null : Math.abs(difference) < 0.000001,
     );
 
     function clearText(): void {
         pastedText = '';
         hmrcResultInput = '';
+        firstTimeBuyerOverride = 'auto';
     }
 
     function parseKeyValueLine(line: string): { key: string; value: string } | null {
@@ -165,12 +321,25 @@
             return { key: match[1].trim(), value: match[2].trim() };
         }
 
+        for (const label of knownLabels) {
+            const labelMatch = withoutChange.match(
+                new RegExp(`^(${escapeRegExp(label)})\\s+(.+)$`, 'i'),
+            );
+
+            if (labelMatch) {
+                return {
+                    key: labelMatch[1].trim(),
+                    value: labelMatch[2].trim(),
+                };
+            }
+        }
+
         return null;
     }
 
     function findValue(
         keyValues: Array<{ key: string; value: string }>,
-        candidates: string[],
+        candidates: readonly string[],
     ): string | null {
         const candidateSet = new Set(candidates.map((item) => normalize(item)));
 
@@ -210,8 +379,26 @@
             return true;
         }
 
-        if (normalized === 'nonresidential') {
+        if (normalized === 'non residential') {
             return false;
+        }
+
+        return null;
+    }
+
+    function parseTenure(value: string | null): 'freehold' | 'leasehold' | null {
+        if (!value) {
+            return null;
+        }
+
+        const normalized = normalize(value);
+
+        if (normalized === 'freehold') {
+            return 'freehold';
+        }
+
+        if (normalized === 'leasehold') {
+            return 'leasehold';
         }
 
         return null;
@@ -233,6 +420,24 @@
         return Number.isNaN(amount) ? null : amount;
     }
 
+    function isSupportedEffectiveDate(value: string | null): boolean | null {
+        if (!value) {
+            return null;
+        }
+
+        const parsedDate = new Date(value);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return null;
+        }
+
+        return parsedDate >= new Date(sdltConfig.meta.effectiveFrom);
+    }
+
+    function escapeRegExp(value: string): string {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     function normalize(value: string): string {
         return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
     }
@@ -248,7 +453,7 @@
             </p>
             <h1 class="mt-2 font-serif text-3xl">HMRC Calculator Input: £500,000</h1>
             <p class="mt-3 text-slate-600 dark:text-slate-300 text-sm leading-7">
-                Paste the HMRC check-your-answers summary (and result if available). This checker parses the fields, maps them to calculator inputs, runs the SDLT calculator, then asks you to confirm whether the result matches HMRC.
+                Paste the HMRC check-your-answers summary and, if needed, the HMRC SDLT result. The checker now validates whether the pasted scenario is inside the exercise scope before running the calculator.
             </p>
         </section>
 
@@ -274,6 +479,45 @@
                 <p class="mt-2 text-slate-500 dark:text-slate-400 text-xs leading-6">
                     Leave blank if the pasted summary already contains SDLT due.
                 </p>
+
+                {#if parsedSummary.firstTimeBuyer === null}
+                    <div class="bg-slate-50 dark:bg-slate-900/60 mt-4 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                        <p class="font-semibold text-sm">First-time buyer confirmation</p>
+                        <p class="mt-1 text-slate-500 dark:text-slate-400 text-xs leading-6">
+                            HMRC did not provide this field in the pasted summary. Confirm it before comparing results.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <button
+                                type="button"
+                                class="rounded-full border px-4 py-2 text-sm font-medium transition {firstTimeBuyerOverride === 'yes'
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-100'
+                                    : 'border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900'}"
+                                onclick={() => (firstTimeBuyerOverride = 'yes')}
+                            >
+                                Yes
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-full border px-4 py-2 text-sm font-medium transition {firstTimeBuyerOverride === 'no'
+                                    ? 'border-cyan-500 bg-cyan-50 text-cyan-900 dark:border-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-100'
+                                    : 'border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900'}"
+                                onclick={() => (firstTimeBuyerOverride = 'no')}
+                            >
+                                No
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-full border px-4 py-2 text-sm font-medium transition {firstTimeBuyerOverride === 'auto'
+                                    ? 'border-amber-500 bg-amber-50 text-amber-900 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-100'
+                                    : 'border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900'}"
+                                onclick={() => (firstTimeBuyerOverride = 'auto')}
+                            >
+                                Unset
+                            </button>
+                        </div>
+                    </div>
+                {/if}
+
                 <div class="flex justify-end items-center mt-3">
                     <button
                         type="button"
@@ -322,6 +566,16 @@
                 <div class="space-y-3 mt-4 text-sm leading-6">
                     <div class="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl">
                         <p>
+                            Tenure:
+                            <span class="font-semibold">
+                                {parsedSummary.propertyTenure === null
+                                    ? 'Unknown'
+                                    : parsedSummary.propertyTenure === 'freehold'
+                                      ? 'Freehold'
+                                      : 'Leasehold'}
+                            </span>
+                        </p>
+                        <p>
                             Residential:
                             <span class="font-semibold">
                                 {parsedSummary.residential === null
@@ -329,6 +583,26 @@
                                     : parsedSummary.residential
                                       ? 'Residential'
                                       : 'Non-residential'}
+                            </span>
+                        </p>
+                        <p>
+                            Non-UK resident:
+                            <span class="font-semibold">
+                                {parsedSummary.nonUkResident === null
+                                    ? 'Unknown'
+                                    : parsedSummary.nonUkResident
+                                      ? 'Yes'
+                                      : 'No'}
+                            </span>
+                        </p>
+                        <p>
+                            Individual buyer:
+                            <span class="font-semibold">
+                                {parsedSummary.individual === null
+                                    ? 'Unknown'
+                                    : parsedSummary.individual
+                                      ? 'Yes'
+                                      : 'No'}
                             </span>
                         </p>
                         <p>
@@ -342,13 +616,39 @@
                             </span>
                         </p>
                         <p>
-                            First-time buyer:
+                            Owned other property:
                             <span class="font-semibold">
-                                {parsedSummary.firstTimeBuyer === null
-                                    ? 'Unknown (using No)'
-                                    : parsedSummary.firstTimeBuyer
+                                {parsedSummary.ownedOtherProperty === null
+                                    ? 'Unknown'
+                                    : parsedSummary.ownedOtherProperty
                                       ? 'Yes'
                                       : 'No'}
+                            </span>
+                        </p>
+                        <p>
+                            Main residence:
+                            <span class="font-semibold">
+                                {parsedSummary.mainResidence === null
+                                    ? 'Unknown'
+                                    : parsedSummary.mainResidence
+                                      ? 'Yes'
+                                      : 'No'}
+                            </span>
+                        </p>
+                        <p>
+                            First-time buyer:
+                            <span class="font-semibold">
+                                {resolvedFirstTimeBuyer === null
+                                    ? 'Needs confirmation'
+                                    : resolvedFirstTimeBuyer
+                                      ? 'Yes'
+                                      : 'No'}
+                            </span>
+                        </p>
+                        <p>
+                            Effective date:
+                            <span class="font-semibold">
+                                {parsedSummary.effectiveDate ?? 'Unknown'}
                             </span>
                         </p>
                         <p>
@@ -371,7 +671,24 @@
                         </ul>
                     {/if}
 
-                    {#if calculation.validationErrors.length > 0}
+                    {#if parsedSummary.warnings.length > 0}
+                        <ul class="space-y-2">
+                            {#each parsedSummary.warnings as warning (warning)}
+                                <li class="bg-sky-50 dark:bg-sky-900/25 px-3 py-2 border border-sky-300/70 dark:border-sky-700/60 rounded-xl text-sky-900 dark:text-sky-100">
+                                    {warning}
+                                </li>
+                            {/each}
+                        </ul>
+                    {/if}
+
+                    {#if comparisonBlockers.length > 0}
+                        <div class="bg-slate-50 dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                            <p class="font-semibold">Comparison paused</p>
+                            <p class="mt-1 text-slate-600 dark:text-slate-300 text-sm leading-6">
+                                This scenario is either out of scope for the current exercise or needs missing input confirmed before exact-parity comparison can begin.
+                            </p>
+                        </div>
+                    {:else if calculation.validationErrors.length > 0}
                         <ul class="space-y-2">
                             {#each calculation.validationErrors as error (error)}
                                 <li class="bg-rose-50 dark:bg-rose-900/25 px-3 py-2 border border-rose-300/70 dark:border-rose-700/60 rounded-xl text-rose-900 dark:text-rose-100">
@@ -403,7 +720,7 @@
                                     ? 'border border-emerald-300/70 bg-emerald-50 text-emerald-900 dark:border-emerald-700/60 dark:bg-emerald-900/25 dark:text-emerald-100'
                                     : 'border border-rose-300/70 bg-rose-50 text-rose-900 dark:border-rose-700/60 dark:bg-rose-900/25 dark:text-rose-100'}">
                                     {#if isMatch}
-                                        Match found. Does this match HMRC result? Yes.
+                                        Exact match found. Does this match HMRC result? Yes.
                                     {:else}
                                         Difference found ({formatCurrency(Math.abs(difference ?? 0))}). Does this match HMRC result? No.
                                     {/if}

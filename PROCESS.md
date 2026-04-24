@@ -116,12 +116,12 @@ NB: times are approximate
 
 #### 01:10
 - Status: Debug caculator divergences
-- What I changed: 
-- What I learned:
-- Next step:
+- What I changed: Checked JSON file with external AI that has read PLAN, it has pointed out three areas of possible divergence. Meantime VSC Code Pilot is planning out the investigation.
+- What I learned: Prioritorised the scenario parser.  Tested with one scenario and appears to be in agreement
+- Next step: test other scenarios
 
-#### 01:30
-- Status:
+#### 01:25
+- Status: testing scenarios
 - What I changed:
 - What I learned:
 - Next step:
@@ -158,6 +158,7 @@ NB: times are approximate
 - 2026-04-24: Add /scenarios/hmrc/500000 route and page for pasting HMRC calculator text entries.
 - 2026-04-24: Add /scenarios and /scenarios/hmrc index pages with a shared navigation header layout linking Home and Calculator.
 - 2026-04-24: Update HMRC 500000 scenario page to parse HMRC summary inputs/results and compare against calculator output.
+- 2026-04-24: Begin parser-hardening for HMRC scenario input, including broader field extraction and explicit out-of-scope gating.
 
 ## Verification
 
